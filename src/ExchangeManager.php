@@ -107,7 +107,7 @@ class ExchangeManager
 
 	protected function getQuery(): string
 	{
-		return $this->request->getQuery($this->parameter);
+		return (string) $this->request->getQuery($this->parameter);
 	}
 
 
