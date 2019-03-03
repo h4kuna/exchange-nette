@@ -37,7 +37,7 @@ exchangeExtension:
                 zeroIsEmpty: TRUE
                 emptyValue: '-'
                 zeroClear: TRUE
-                intOnly: NULL
+                intOnly: -1 #DISABLE_INT_ONLY -1, ZERO_CLEAR 1, ZERO_IS_EMPTY 2
                 mask: '1U'
                 showUnit: FALSE 
                 nbsp: TRUE
