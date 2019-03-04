@@ -151,7 +151,7 @@ final class ExchangeExtension extends NDI\CompilerExtension
 	{
 		return $builder->addDefinition($this->prefix('filters'))
 			->setFactory(Exchange\Filters::class, [$exchange, $formats])
-			->setAutowired(false);
+			->setAutowired();
 	}
 
 
