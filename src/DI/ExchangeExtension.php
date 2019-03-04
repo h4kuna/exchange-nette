@@ -28,12 +28,6 @@ final class ExchangeExtension extends NDI\CompilerExtension
 	];
 
 
-	public function __construct(string $tempDir)
-	{
-		$this->defaults['tempDir'] = $tempDir . DIRECTORY_SEPARATOR . 'currencies';
-	}
-
-
 	public function loadConfiguration()
 	{
 		$config = $this->validateConfig($this->defaults);
