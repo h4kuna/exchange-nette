@@ -73,7 +73,7 @@ final class ExchangeExtension extends NDI\CompilerExtension
 				->getResultDefinition()->addSetup('addFilter', [$this->config->filters['currency'], [$this->prefix('@filters'), 'format']]);
 			if ($this->config->vat) {
 				$latte->addSetup('addFilter', [
-					$this->config['filters']['vat'],
+					$this->config->filters['vat'],
 					[$this->prefix('@filters'), 'formatVat']
 				]);
 			}
