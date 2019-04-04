@@ -14,7 +14,7 @@ final class ExchangeExtension extends NDI\CompilerExtension
 	public function getConfigSchema(): \Nette\Schema\Schema
 	{
 		return Expect::structure([
-			'vat'              => Expect::int(),
+			'vat'              => Expect::int(0),
 			'strict'           => Expect::bool(true),
 			'defaultFormat'    => Expect::array(),
 			'currencies'       => Expect::anyOf(Expect::arrayOf('array'), false)->default([
