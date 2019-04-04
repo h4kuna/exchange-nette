@@ -6,7 +6,6 @@ use h4kuna\Exchange;
 use h4kuna\Number;
 use Nette\DI as NDI;
 use Nette\Schema\Expect;
-use Nette\Utils\Validators;
 
 final class ExchangeExtension extends NDI\CompilerExtension
 {
