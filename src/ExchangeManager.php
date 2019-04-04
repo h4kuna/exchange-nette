@@ -108,13 +108,13 @@ class ExchangeManager
 
 	protected function getQuery(): string
 	{
-		return $this->request->getQuery($this->parameter, '');
+		return $this->request->getQuery($this->parameter) ?? '';
 	}
 
 
 	protected function getCookie(): string
 	{
-		return $this->request->getCookie($this->parameter, '');
+		return $this->request->getCookie($this->parameter) ?? '';
 	}
 
 

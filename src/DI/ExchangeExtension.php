@@ -5,54 +5,51 @@ namespace h4kuna\Exchange\DI;
 use h4kuna\Exchange;
 use h4kuna\Number;
 use Nette\DI as NDI;
+use Nette\Schema\Expect;
 
 final class ExchangeExtension extends NDI\CompilerExtension
 {
 
-	private $defaults = [
-		'vat' => 0, // 21
-		'strict' => true, // download only defined currencies
-		'defaultFormat' => [], // default number format
-		'currencies' => [
-			'czk' => ['unit' => 'Kč'],
-			'eur' => ['unit' => '€', 'mask' => 'U 1'],
-			'usd' => ['unit' => '$', 'mask' => 'U1']
-		],
-		'tempDir' => '', // cache
-		'session' => false, // true or false
-		'managerParameter' => 'currency', // parameter for query, cookie and session
-		'filters' => [
-			'currency' => 'currency',
-			'vat' => 'vat'
-		]
-	];
-
-
-	public function __construct(string $tempDir)
+	public function getConfigSchema(): \Nette\Schema\Schema
 	{
-		$this->defaults['tempDir'] = $tempDir . DIRECTORY_SEPARATOR . 'currencies';
+		return Expect::structure([
+			'vat'              => Expect::int(),
+			'strict'           => Expect::bool(true),
+			'defaultFormat'    => Expect::array(),
+			'currencies'       => Expect::array()->default([
+				'czk' => ['unit' => 'Kč'],
+				'eur' => ['unit' => '€', 'mask' => 'U 1'],
+				'usd' => ['unit' => '$', 'mask' => 'U1']
+			]),
+			'tempDir'          => Expect::string()->default($this->getContainerBuilder()->parameters['tempDir']
+				. DIRECTORY_SEPARATOR . 'currencies'),
+			'session'          => Expect::bool(false),
+			'managerParameter' => Expect::string('currency'),
+			'filters'          => Expect::array()->default([
+				'currency' => 'currency',
+				'vat'      => 'vat'
+			])
+		]);
 	}
-
 
 	public function loadConfiguration()
 	{
-		$config = $this->validateConfig($this->defaults);
+		$config = $this->config;
 		$builder = $this->getContainerBuilder();
 
-		$this->buildExchangeManager($builder, $config['managerParameter'], $config['session']);
+		$this->buildExchangeManager($builder, $config->managerParameter, $config->session);
 		$nff = $this->buildNumberFormatFactory($builder);
 
-		[$currencies, $formats] = $this->buildFormats($builder, $nff, $config['defaultFormat'], $config['currencies']);
+		[$currencies, $formats] = $this->buildFormats($builder, $nff, $config->defaultFormat, $config->currencies);
 
-		$cache = $this->buildCache($builder, $config['strict'] ? $currencies : [], $config['tempDir']);
+		$cache = $this->buildCache($builder, $config->strict ? $currencies : [], $config->tempDir);
 
 		$exchange = $this->buildExchange($builder, $cache);
 
 		$filters = $this->buildFilters($builder, $exchange, $formats);
 
-		$this->buildVat($builder, $filters, (float) $config['vat']);
+		$this->buildVat($builder, $filters, (float) $config->vat);
 	}
-
 
 	public function beforeCompile()
 	{
@@ -73,8 +70,8 @@ final class ExchangeExtension extends NDI\CompilerExtension
 
 		if ($builder->hasDefinition('latte.latteFactory')) {
 			$latte = $builder->getDefinition('latte.latteFactory')
-				->addSetup('addFilter', [$this->config['filters']['currency'], [$this->prefix('@filters'), 'format']]);
-			if ($this->config['vat']) {
+				->getResultDefinition()->addSetup('addFilter', [$this->config->filters['currency'], [$this->prefix('@filters'), 'format']]);
+			if ($this->config->vat) {
 				$latte->addSetup('addFilter', [
 					$this->config['filters']['vat'],
 					[$this->prefix('@filters'), 'formatVat']
