@@ -48,7 +48,7 @@ exchangeExtension:
             gbp: [] # use default format 
     
     session: [FALSE] # save info about currencies to session, default is only to cookie
-    vat: [NULL] # add number like percent, example: 21
+    vat: [0] # add number like percent, example: 21
     strict: [FALSE] # default enabled, download only defined currencies, example: ['CZK', 'EUR']
     defaultFormat: [NULL] # how format currency if format is not defined, value is array like above "currencies.czk" 
     managerParameter: [currency] # is parameter for query, cookie and session if is available
