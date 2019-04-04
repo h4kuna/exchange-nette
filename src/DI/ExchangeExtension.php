@@ -6,6 +6,7 @@ use h4kuna\Exchange;
 use h4kuna\Number;
 use Nette\DI as NDI;
 use Nette\Schema\Expect;
+use Nette\Utils\Validators;
 
 final class ExchangeExtension extends NDI\CompilerExtension
 {
@@ -16,7 +17,7 @@ final class ExchangeExtension extends NDI\CompilerExtension
 			'vat'              => Expect::int(),
 			'strict'           => Expect::bool(true),
 			'defaultFormat'    => Expect::array(),
-			'currencies'       => Expect::array()->default([
+			'currencies'       => Expect::anyOf(Expect::arrayOf('array'), false)->default([
 				'czk' => ['unit' => 'Kč'],
 				'eur' => ['unit' => '€', 'mask' => 'U 1'],
 				'usd' => ['unit' => '$', 'mask' => 'U1']
@@ -25,7 +26,7 @@ final class ExchangeExtension extends NDI\CompilerExtension
 				. DIRECTORY_SEPARATOR . 'currencies'),
 			'session'          => Expect::bool(false),
 			'managerParameter' => Expect::string('currency'),
-			'filters'          => Expect::array()->default([
+			'filters'          => Expect::anyOf(Expect::arrayOf('array'), false)->default([
 				'currency' => 'currency',
 				'vat'      => 'vat'
 			])
