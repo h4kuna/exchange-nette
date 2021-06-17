@@ -1,6 +1,6 @@
 Exchange extension for Nette framework
 -------
-[![Build Status](https://travis-ci.org/h4kuna/exchange-nette.svg?branch=master)](https://travis-ci.org/h4kuna/exchange-nette)
+[![Build Status](https://travis-ci.com/h4kuna/exchange-nette.svg?branch=master)](https://travis-ci.com/h4kuna/exchange-nette)
 [![Latest stable](https://img.shields.io/packagist/v/h4kuna/exchange-nette.svg)](https://packagist.org/packages/h4kuna/exchange-nette)
 [![Downloads this Month](https://img.shields.io/packagist/dm/h4kuna/exchange-nette.svg)](https://packagist.org/packages/h4kuna/exchange-nette)
 
