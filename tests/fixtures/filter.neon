@@ -1,0 +1,9 @@
+exchange:
+	currencies!:
+		eur:
+			decimalPoint: '.'
+			unit: '€'
+		usd: []
+
+services:
+	exchange.rating.list.accessor: h4kuna\Exchange\RatingList\RatingListRequest(h4kuna\Exchange\Tests\RatingList())

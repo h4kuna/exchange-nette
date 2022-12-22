@@ -12,20 +12,28 @@
 		}
 	],
 	"require": {
-		"php": ">=7.1",
-		"h4kuna/exchange": "^6.0",
-		"latte/latte": "^2.5",
-		"nette/application": "^3.0",
-		"nette/bootstrap": "^3.0",
-		"nette/http": "^3.0"
+		"php": ">=8.0",
+		"h4kuna/exchange": "^7.0.2",
+		"h4kuna/number-format": "^4.0",
+		"latte/latte": "^3.0",
+		"nette/di": "^3.0",
+		"nette/http": "^3.0",
+		"nette/utils": "^3.2"
 	},
 	"require-dev": {
 		"tracy/tracy": "^2.0",
-		"nette/tester": "^2.0"
+		"nette/tester": "^2.0",
+		"phpstan/phpstan": "^1.9",
+		"guzzlehttp/guzzle": "^7.5",
+		"nette/application": "^3.1"
 	},
 	"autoload": {
 		"psr-4": {
 			"h4kuna\\Exchange\\": "src\\"
 		}
+	},
+	"scripts": {
+		"phpstan": "vendor/bin/phpstan analyse",
+		"tests": "vendor/bin/tester -s -j 5 -C --colors 1 tests/src"
 	}
 }

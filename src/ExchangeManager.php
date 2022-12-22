@@ -2,7 +2,7 @@
 
 namespace h4kuna\Exchange;
 
-use h4kuna\Exchange\Exceptions\UnknownCurrency;
+use h4kuna\Exchange\RatingList\Accessor;
 use Nette;
 use Nette\Http;
 
@@ -12,29 +12,21 @@ class ExchangeManager
 
 	private const EMPTY_CODE = '';
 
-	/** @var callable[] */
-	public $onChangeCurrency;
+	/** @var array<callable> */
+	public array $onChangeCurrency;
 
-	/** @var Exchange */
-	private $exchange;
+	protected ?Http\SessionSection $session = null;
 
-	/** @var Http\Request */
-	protected $request;
-
-	/** @var Http\Response */
-	protected $response;
-
-	/** @var Http\SessionSection */
-	protected $session;
-
-	protected $parameter = 'currency';
+	protected string $parameter = 'currency';
 
 
-	public function __construct(Exchange $exchange, Http\Request $request, Http\Response $response)
+	public function __construct(
+		private Accessor $ratingList,
+		private Configuration $configuration,
+		private Http\Request $request,
+		private Http\Response $response,
+	)
 	{
-		$this->exchange = $exchange;
-		$this->request = $request;
-		$this->response = $response;
 	}
 
 
@@ -50,7 +42,10 @@ class ExchangeManager
 	}
 
 
-	public function init(Nette\Application\IPresenter $presenter): void
+	/**
+	 * @param mixed $presenter
+	 */
+	public function init($presenter): void
 	{
 		$code = $this->setCurrency($this->getQuery());
 		if ($code === self::EMPTY_CODE) {
@@ -58,7 +53,7 @@ class ExchangeManager
 				$this->initSession();
 			}
 		} else {
-			$this->onChangeCurrency($presenter, $code, $this->exchange);
+			$this->onChangeCurrency($presenter, $code);
 		}
 	}
 
@@ -68,16 +63,17 @@ class ExchangeManager
 		if ($code === self::EMPTY_CODE) {
 			return self::EMPTY_CODE;
 		}
-		try {
-			$newCode = $this->exchange->setOutput($code)->code;
-		} catch (UnknownCurrency $e) {
+		$code = strtoupper($code);
+
+		if (!$this->ratingList->get()->offsetExists($code)) {
 			return self::EMPTY_CODE;
 		}
 
-		$this->saveCookie($newCode);
-		$this->saveSession($newCode);
+		$this->configuration->to = $code;
+		$this->saveCookie($code);
+		$this->saveSession($code);
 
-		return $newCode;
+		return $code;
 	}
 
 
@@ -87,6 +83,7 @@ class ExchangeManager
 		if ($code === self::EMPTY_CODE) {
 			$this->deleteCookie();
 		}
+
 		return $code;
 	}
 
@@ -108,13 +105,13 @@ class ExchangeManager
 
 	protected function getQuery(): string
 	{
-		return $this->request->getQuery($this->parameter) ?? '';
+		return strval($this->request->getQuery($this->parameter));
 	}
 
 
 	protected function getCookie(): string
 	{
-		return $this->request->getCookie($this->parameter) ?? '';
+		return strval($this->request->getCookie($this->parameter));
 	}
 
 

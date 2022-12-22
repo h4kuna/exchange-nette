@@ -1,12 +1,11 @@
 Exchange extension for Nette framework
 -------
-[![Build Status](https://travis-ci.com/h4kuna/exchange-nette.svg?branch=master)](https://travis-ci.com/h4kuna/exchange-nette)
 [![Latest stable](https://img.shields.io/packagist/v/h4kuna/exchange-nette.svg)](https://packagist.org/packages/h4kuna/exchange-nette)
 [![Downloads this Month](https://img.shields.io/packagist/dm/h4kuna/exchange-nette.svg)](https://packagist.org/packages/h4kuna/exchange-nette)
 
 This library is extension for Nette Framework and for this [Exchange](//github.com/h4kuna/exchange).
 
-## Instalation
+## Installation
 Simple via composer 
 ```sh
 $ composer require h4kuna/exchange-nette
