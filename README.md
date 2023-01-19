@@ -42,23 +42,28 @@ exchangeExtension:
             usd:
                 unit: '$'
             gbp: [] # use default format 
-    
-    session: [FALSE] # save info about currencies to session, default is only to cookie
-    vat: [0] # add number like percent, example: 21
-    strict: [FALSE] # default enabled, download only defined currencies, example: ['CZK', 'EUR']
-    defaultFormat: [NULL] # how format currency if format is not defined, value is array like above "currencies.czk" 
-    managerParameter: [currency] # is parameter for query, cookie and session if is available
-    tempDir: /tmp # temporary directory for cache
-    filters: # extension define two filter for latte, you can rename
+            foo: null # disable
+    driver: # string class of h4kuna\Exchange\Driver\Driver default is Cnb\Day
+    session: false # save info about currencies to session, default is only to cookie 
+    vat: 21 # add number like percent
+    strict: true # default enabled, download only defined currencies, example: ['CZK', 'EUR']
+    defaultFormat: null # how format currency if format is not defined, value is array like above "currencies.czk" 
+    managerParameter: 'currency' # is parameter for query, cookie and session if is available
+    tempDir: %tempDir% # temporary directory for cache
+    filters: # extension define frour filter for latte, you can rename
         currency: currency
-        vat: vat # if is set above via "vat"
+        currencyTo: currencyTo
+        vat: vat
+        vatTo: vatTo
 ```
 
 ## Latte
-Now we have two new filters.
+Now we have four new filters.
 ```latte
 {=100|currency}
 {=100|vat}
+{=100|currencyTo}
+{=100|vatTo}
 ```
 
 ## Request
