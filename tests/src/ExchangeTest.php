@@ -2,9 +2,10 @@
 
 namespace h4kuna\Exchange;
 
+use h4kuna\CriticalCache\Cache;
+use h4kuna\CriticalCache\CacheFactory;
 use h4kuna\Exchange\DI\ExchangeExtension;
 use h4kuna\Number;
-use Nette\Application\Routers\Route;
 use Nette\Bridges\ApplicationDI\ApplicationExtension;
 use Nette\Bridges\ApplicationDI\LatteExtension;
 use Nette\Bridges\ApplicationLatte\LatteFactory;
@@ -28,8 +29,8 @@ $class = $loader->load(function (DI\Compiler $compiler): void {
 			'tempDir' => TEMP_DIR,
 		],
 		'services' => [
-			SimpleRouter::class
-		]
+			SimpleRouter::class,
+		],
 	],
 	);
 }, __FILE__);
@@ -43,11 +44,11 @@ Assert::type(Exchange::class, $exchange);
 
 Assert::type(ExchangeManager::class, $container->getService('exchange.exchange.manager'));
 
-Assert::type(Number\NumberFormatFactory::class, $container->getService('exchange.number.format.factory'));
-
 Assert::type(Formats::class, $container->getService('exchange.formats'));
 
-Assert::type(Caching\Cache::class, $container->getService('exchange.cache'));
+Assert::type(Cache::class, $container->getService('exchange.cache'));
+
+Assert::type(CacheFactory::class, $container->getService('exchange.cache.factory'));
 
 Assert::type(Exchange::class, $container->getService('exchange.exchange'));
 

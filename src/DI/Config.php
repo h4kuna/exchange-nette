@@ -6,7 +6,7 @@ namespace h4kuna\Exchange\DI;
 use h4kuna\Exchange\Driver\Cnb\Day;
 
 /**
- * @phpstan-type currency array{unit?: string, mask?: string, showUnit?: bool, nbsp?: bool, decimal?: int, decimalPoint?: string, thousandsSeparator?: string, zeroIsEmpty?: bool, emptyValue?: ?string, zeroClear?: bool, intOnly?: int, round?: int,}
+ * @phpstan-type currency array{unit?: string, mask?: string, showUnitIfEmpty?: bool, nbsp?: bool, decimal?: int, decimalPoint?: string, thousandsSeparator?: string, zeroIsEmpty?: bool, emptyValue?: string, zeroClear?: bool, round?: ?int,}
  */
 final class Config
 {
@@ -17,7 +17,7 @@ final class Config
 	public string $driver = Day::class;
 
 	/**
-	 * @var ?currency
+	 * @var array<currency>
 	 */
 	public $defaultFormat = [];
 

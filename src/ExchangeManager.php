@@ -22,7 +22,6 @@ class ExchangeManager
 
 	public function __construct(
 		private Accessor $ratingList,
-		private Configuration $configuration,
 		private Http\Request $request,
 		private Http\Response $response,
 	)
@@ -69,7 +68,6 @@ class ExchangeManager
 			return self::EMPTY_CODE;
 		}
 
-		$this->configuration->to = $code;
 		$this->saveCookie($code);
 		$this->saveSession($code);
 

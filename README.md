@@ -30,12 +30,12 @@ exchangeExtension:
                 decimals: 3
                 decimalPoint: '.'
                 thousandsSeparator: ','
-                zeroIsEmpty: TRUE
+                zeroIsEmpty: true
                 emptyValue: '-'
-                zeroClear: TRUE
+                zeroClear: true
                 mask: '1U'
-                showUnit: FALSE 
-                nbsp: TRUE
+                showUnitIfEmpty: false 
+                nbsp: true
                 unit: Kč
                 intOnly: -1 # -1 is default value
                 

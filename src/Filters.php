@@ -35,7 +35,7 @@ class Filters
 	{
 		$data = $this->exchange->transfer($number, $from, $to);
 
-		return $this->formats->getFormat($data[1]->code)->format($data[0], null, $data[1]->code);
+		return $this->formats->getFormat($data[1]->code)->format($data[0]);
 	}
 
 

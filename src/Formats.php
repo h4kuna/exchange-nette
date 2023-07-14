@@ -3,7 +3,6 @@
 namespace h4kuna\Exchange;
 
 use h4kuna\Exchange;
-use h4kuna\Number;
 use h4kuna\Number\NumberFormat;
 
 class Formats
@@ -17,13 +16,8 @@ class Formats
 	private ?NumberFormat $default = null;
 
 
-	public function __construct(private Number\NumberFormatFactory $numberFormatFactory)
-	{
-	}
-
-
 	/**
-	 * @param array<string, bool|int|string|null>|NumberFormat $setup
+	 * @param array{decimals?: int|null}|NumberFormat $setup
 	 */
 	public function setDefaultFormat(array|NumberFormat $setup): void
 	{
@@ -32,7 +26,7 @@ class Formats
 		}
 
 		if (is_array($setup)) {
-			$setup = $this->numberFormatFactory->createUnit($setup);
+			$setup = new NumberFormat(...$setup);
 		}
 
 		$this->default = $setup;
@@ -52,16 +46,16 @@ class Formats
 
 	public function getFormat(string $code): NumberFormat
 	{
-		if (isset($this->formats[$code])) {
-			return $this->formats[$code];
-		} elseif (isset($this->rawFormats[$code])) {
-			if (!isset($this->rawFormats[$code]['unit'])) {
-				$this->rawFormats[$code]['unit'] = $code;
+		if (isset($this->formats[$code]) === false) {
+			if (isset($this->rawFormats[$code])) {
+				if (!isset($this->rawFormats[$code]['unit'])) {
+					$this->rawFormats[$code]['unit'] = $code;
+				}
+				$this->formats[$code] = $this->getDefaultFormat()->modify(...$this->rawFormats[$code]);
+				unset($this->rawFormats[$code]);
+			} else {
+				$this->formats[$code] = $this->getDefaultFormat()->modify(unit: $code);
 			}
-			$this->formats[$code] = $this->numberFormatFactory->createUnitPersistent('', $this->rawFormats[$code]); // first parameter is ignored;
-			unset($this->rawFormats[$code]);
-		} else {
-			$this->formats[$code] = $this->getDefaultFormat();
 		}
 
 		return $this->formats[$code];
@@ -71,7 +65,7 @@ class Formats
 	private function getDefaultFormat(): NumberFormat
 	{
 		if ($this->default === null) {
-			$this->default = $this->numberFormatFactory->createUnit();
+			$this->default = new NumberFormat();
 		}
 
 		return $this->default;

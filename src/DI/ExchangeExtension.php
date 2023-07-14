@@ -4,16 +4,16 @@ namespace h4kuna\Exchange\DI;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\HttpFactory;
+use h4kuna\CriticalCache\CacheFactory;
+use h4kuna\Dir\TempDir;
 use h4kuna\Exchange;
 use h4kuna\Number;
 use Nette\DI;
+use Nette\Http\Request;
+use Nette\Http\Response;
 use Nette\Http\Session;
 use Nette\Schema\Expect;
 use Nette\Schema\Schema;
-use Nette\Http\Request;
-use Nette\Http\Response;
-use NinjaMutex\Lock\FlockLock;
-use NinjaMutex\Lock\LockInterface;
 use Psr\Http;
 use Psr\Http\Message\RequestFactoryInterface;
 
@@ -25,11 +25,10 @@ final class ExchangeExtension extends DI\CompilerExtension
 
 	public function getConfigSchema(): Schema
 	{
-		$tempDir = ($this->getContainerBuilder()->parameters['tempDir'] ?? sys_get_temp_dir()) . '/h.exchange';
-		!is_dir($tempDir) && mkdir($tempDir, 0777, true);
+		$tempDir = new TempDir($this->getContainerBuilder()->parameters['tempDir'] ?? '');
 
 		$config = new Config;
-		$config->tempDir = $tempDir;
+		$config->tempDir = $tempDir->create()->getDir();
 
 		return Expect::from($config);
 	}
@@ -42,8 +41,6 @@ final class ExchangeExtension extends DI\CompilerExtension
 		$this->buildRatingListCacheBuilder();
 
 		$this->buildDriverAccessor();
-
-		$this->buildConfiguration();
 
 		$this->buildCnb();
 
@@ -65,9 +62,7 @@ final class ExchangeExtension extends DI\CompilerExtension
 
 	public function beforeCompile()
 	{
-		$this->buildBeforeNumberFormatFactory();
 		$this->buildBeforeClient();
-		$this->buildBeforeLock();
 		$this->buildBeforeRequestFactory();
 		$this->buildBeforeExchangeManager();
 		$this->addDrivers();
@@ -100,7 +95,6 @@ final class ExchangeExtension extends DI\CompilerExtension
 			->setFactory(Exchange\ExchangeManager::class)
 			->setArguments([
 				'ratingList' => $this->prefix('@rating.list.accessor'),
-				'configuration' => $this->prefix('@configuration'),
 			])
 			->addSetup('setParameter', [$this->config->managerParameter])
 			->setAutowired(false);
@@ -115,7 +109,7 @@ final class ExchangeExtension extends DI\CompilerExtension
 	{
 		$formats = $this->getContainerBuilder()
 			->addDefinition($this->prefix('formats'))
-			->setFactory(Exchange\Formats::class, [$this->prefix('@number.format.factory')])
+			->setFactory(Exchange\Formats::class)
 			->setAutowired(false);
 
 		$defaultFormat = $this->config->defaultFormat;
@@ -133,20 +127,33 @@ final class ExchangeExtension extends DI\CompilerExtension
 
 	private function buildCache(): void
 	{
+		$this->buildCacheFactory();
+
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('cache'))
-			->setFactory(Exchange\Caching\Cache::class, [$this->config->tempDir])
+			->setFactory([$this->prefix('@cache.factory'), 'create'])
+			->setAutowired(false);
+	}
+
+
+	private function buildCacheFactory(): void
+	{
+		$this->getContainerBuilder()
+			->addDefinition($this->prefix('cache.factory'))
+			->setFactory(CacheFactory::class, [$this->config->tempDir])
 			->setAutowired(false);
 	}
 
 
 	private function buildExchange(): void
 	{
+		$from = array_key_first($this->config->currencies);
+
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('exchange'))
 			->setFactory(Exchange\Exchange::class)
 			->setArguments([
-				'configuration' => $this->prefix('@configuration'),
+				'from' => $from,
 				'ratingList' => $this->prefix('@rating.list.accessor'),
 			]);
 	}
@@ -207,7 +214,6 @@ final class ExchangeExtension extends DI\CompilerExtension
 			->setFactory(Exchange\RatingList\RatingListCache::class)
 			->setArguments([
 				'cache' => $this->prefix('@cache'),
-				'lock' => $this->prefix('@lock'),
 				'ratingListBuilder' => $this->prefix('@rating.list.builder'),
 				'driverAccessor' => $this->prefix('@driver.accessor'),
 			]);
@@ -248,44 +254,10 @@ final class ExchangeExtension extends DI\CompilerExtension
 	}
 
 
-	private function buildConfiguration(): void
-	{
-		$from = array_key_first($this->config->currencies);
-		if ($from === null) {
-			throw new Exchange\Exceptions\ExtensionException('Lets\'s define one currency in option currencies.');
-		}
-
-		$this->getContainerBuilder()
-			->addDefinition($this->prefix('configuration'))
-			->setFactory(Exchange\Configuration::class)
-			->setArguments([
-				'from' => strtoupper($from),
-				'to' => strtoupper($from),
-			])
-			->setAutowired(false);
-	}
-
-
-	private function buildBeforeNumberFormatFactory(): void
-	{
-		$this->buildAndCheckIfExists('number.format.factory', Number\NumberFormatFactory::class);
-	}
-
-
 	private function buildBeforeClient(): void
 	{
 		$this->buildAndCheckIfExists('http.client', Client::class, function (): void {
-			Exchange\ExchangeFactory::checkGuzzle(Client::class);
-		});
-	}
-
-
-	private function buildBeforeLock(): void
-	{
-		$this->buildAndCheckIfExists('lock', LockInterface::class, function (
-			DI\Definitions\ServiceDefinition $serviceDefinition,
-		) {
-			$serviceDefinition->setFactory(FlockLock::class, [$this->config->tempDir]);
+			Exchange\Exceptions\MissingDependencyException::guzzleClient();
 		});
 	}
 
@@ -321,7 +293,7 @@ final class ExchangeExtension extends DI\CompilerExtension
 		$this->buildAndCheckIfExists('http.request.factory', RequestFactoryInterface::class, function (
 			DI\Definitions\ServiceDefinition $definition,
 		) {
-			Exchange\ExchangeFactory::checkGuzzle(HttpFactory::class);
+			Exchange\Exceptions\MissingDependencyException::guzzleFactory();
 			$definition->setFactory(HttpFactory::class);
 		});
 	}

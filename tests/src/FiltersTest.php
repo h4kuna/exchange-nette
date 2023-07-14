@@ -33,7 +33,7 @@ assert($filters instanceof Filters);
 $exchange = $container->getByType(Exchange\Exchange::class);
 assert($exchange instanceof Exchange\Exchange);
 
-Assert::same('EUR', $exchange->getDefault()->code);
+Assert::same('EUR', $exchange->getFrom()->code);
 
 Assert::same(80.0, $filters->change(100, 'USD', 'EUR'));
 
