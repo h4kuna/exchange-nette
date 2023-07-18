@@ -107,20 +107,22 @@ final class ExchangeExtension extends DI\CompilerExtension
 
 	private function buildFormats(): void
 	{
+		$formatsData = [];
+		foreach ($this->config->currencies as $code => $entity) {
+			if (is_array($entity)) {
+				$entity = new DI\Definitions\Statement(Number\NumberFormat::class, $entity);
+			}
+			$formatsData[strtoupper($code)] = $entity;
+		}
+
 		$formats = $this->getContainerBuilder()
 			->addDefinition($this->prefix('formats'))
-			->setFactory(Exchange\Formats::class)
+			->setFactory(Number\Utils\Formats::class, [$formatsData])
 			->setAutowired(false);
 
 		$defaultFormat = $this->config->defaultFormat;
 		if ($defaultFormat !== []) {
-			$formats->addSetup('setDefaultFormat', [$defaultFormat]);
-		}
-
-		foreach ($this->config->currencies as $code => $setup) {
-			if (is_array($setup)) {
-				$formats->addSetup('addFormat', [$code, $setup]);
-			}
+			$formats->addSetup('setDefault', [$defaultFormat]);
 		}
 	}
 

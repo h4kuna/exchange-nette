@@ -44,7 +44,7 @@ Assert::type(Exchange::class, $exchange);
 
 Assert::type(ExchangeManager::class, $container->getService('exchange.exchange.manager'));
 
-Assert::type(Formats::class, $container->getService('exchange.formats'));
+Assert::type(Number\Utils\Formats::class, $container->getService('exchange.formats'));
 
 Assert::type(Cache::class, $container->getService('exchange.cache'));
 

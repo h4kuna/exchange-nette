@@ -3,7 +3,8 @@ exchange:
 		eur:
 			decimalPoint: '.'
 			unit: '€'
-		usd: []
+		usd:
+			unit: 'USD'
 
 services:
 	exchange.rating.list.accessor: h4kuna\Exchange\RatingList\RatingListRequest(h4kuna\Exchange\Tests\RatingList())

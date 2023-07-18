@@ -9,7 +9,7 @@ class Filters
 
 	public function __construct(
 		private Exchange $exchange,
-		private Formats $formats,
+		private Number\Utils\Formats $formats,
 		private Number\Tax $tax,
 	)
 	{
@@ -35,7 +35,7 @@ class Filters
 	{
 		$data = $this->exchange->transfer($number, $from, $to);
 
-		return $this->formats->getFormat($data[1]->code)->format($data[0]);
+		return $this->formats->get($data[1]->code)->format($data[0]);
 	}
 
 

@@ -103,13 +103,19 @@ class ExchangeManager
 
 	protected function getQuery(): string
 	{
-		return strval($this->request->getQuery($this->parameter));
+		$value = $this->request->getQuery($this->parameter);
+		assert($value === null || is_string($value));
+
+		return (string) $value;
 	}
 
 
 	protected function getCookie(): string
 	{
-		return strval($this->request->getCookie($this->parameter));
+		$value = $this->request->getCookie($this->parameter);
+		assert($value === null || is_string($value));
+
+		return (string) $value;
 	}
 
 

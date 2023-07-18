@@ -27,7 +27,7 @@ $container = new $class();
 assert($container instanceof DI\Container);
 
 $formats = $container->getService('exchange.formats');
-assert($formats instanceof Formats);
+assert($formats instanceof h4kuna\Number\Utils\Formats);
 $filters = $container->getService('exchange.filters');
 assert($filters instanceof Filters);
 $exchange = $container->getByType(Exchange\Exchange::class);
