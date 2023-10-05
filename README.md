@@ -1,7 +1,10 @@
 Exchange extension for Nette framework
 -------
-[![Latest stable](https://img.shields.io/packagist/v/h4kuna/exchange-nette.svg)](https://packagist.org/packages/h4kuna/exchange-nette)
 [![Downloads this Month](https://img.shields.io/packagist/dm/h4kuna/exchange-nette.svg)](https://packagist.org/packages/h4kuna/exchange-nette)
+[![Latest Stable Version](https://poser.pugx.org/h4kuna/exchange-nette/v/stable?format=flat)](https://packagist.org/packages/h4kuna/exchange-nette)
+[![Coverage Status](https://coveralls.io/repos/github/h4kuna/exchange-nette/badge.svg?branch=master)](https://coveralls.io/github/h4kuna/exchange-nette?branch=master)
+[![Total Downloads](https://poser.pugx.org/h4kuna/exchange-nette/downloads?format=flat)](https://packagist.org/packages/h4kuna/exchange-nette)
+[![License](https://poser.pugx.org/h4kuna/exchange-nette/license?format=flat)](https://packagist.org/packages/h4kuna/exchange-nette)
 
 This library is extension for Nette Framework and for this [Exchange](//github.com/h4kuna/exchange).
 
