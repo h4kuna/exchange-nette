@@ -7,7 +7,7 @@ use GuzzleHttp\Psr7\HttpFactory;
 use h4kuna\CriticalCache\CacheFactory;
 use h4kuna\Dir\TempDir;
 use h4kuna\Exchange;
-use h4kuna\Number;
+use h4kuna\Format;
 use Nette\DI;
 use Nette\Http\Request;
 use Nette\Http\Response;
@@ -110,14 +110,14 @@ final class ExchangeExtension extends DI\CompilerExtension
 		$formatsData = [];
 		foreach ($this->config->currencies as $code => $entity) {
 			if (is_array($entity)) {
-				$entity = new DI\Definitions\Statement(Number\NumberFormat::class, $entity);
+				$entity = new DI\Definitions\Statement(Format\Number\Formatters\NumberFormatter::class, $entity);
 			}
 			$formatsData[strtoupper($code)] = $entity;
 		}
 
 		$formats = $this->getContainerBuilder()
 			->addDefinition($this->prefix('formats'))
-			->setFactory(Number\Utils\Formats::class, [$formatsData])
+			->setFactory(Format\Number\Formats::class, [$formatsData])
 			->setAutowired(false);
 
 		$defaultFormat = $this->config->defaultFormat;
@@ -178,7 +178,7 @@ final class ExchangeExtension extends DI\CompilerExtension
 	{
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('vat'))
-			->setFactory(Number\Tax::class, [$this->config->vat])
+			->setFactory(Format\Number\Tax::class, [$this->config->vat])
 			->setAutowired(false);
 	}
 

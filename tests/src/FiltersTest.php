@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace h4kuna\Exchange;
+namespace h4kuna\Exchange\Tests;
 
 use h4kuna;
 use h4kuna\Exchange;
@@ -27,9 +27,9 @@ $container = new $class();
 assert($container instanceof DI\Container);
 
 $formats = $container->getService('exchange.formats');
-assert($formats instanceof h4kuna\Number\Utils\Formats);
+assert($formats instanceof h4kuna\Format\Number\Formats);
 $filters = $container->getService('exchange.filters');
-assert($filters instanceof Filters);
+assert($filters instanceof Exchange\Filters);
 $exchange = $container->getByType(Exchange\Exchange::class);
 assert($exchange instanceof Exchange\Exchange);
 

@@ -2,15 +2,15 @@
 
 namespace h4kuna\Exchange;
 
-use h4kuna\Number;
+use h4kuna\Format;
 
 class Filters
 {
 
 	public function __construct(
 		private Exchange $exchange,
-		private Number\Utils\Formats $formats,
-		private Number\Tax $tax,
+		private Format\Number\Formats $formats,
+		private Format\Number\Tax $tax,
 	)
 	{
 	}

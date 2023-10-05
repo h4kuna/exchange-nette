@@ -1,11 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace h4kuna\Exchange;
+namespace h4kuna\Exchange\Tests;
 
 use h4kuna\CriticalCache\Cache;
 use h4kuna\CriticalCache\CacheFactory;
 use h4kuna\Exchange\DI\ExchangeExtension;
-use h4kuna\Number;
+use h4kuna\Exchange\Exchange;
+use h4kuna\Exchange\ExchangeManager;
+use h4kuna\Exchange\Filters;
+use h4kuna\Format\Number\Formats;
+use h4kuna\Format\Number\Tax;
 use Nette\Bridges\ApplicationDI\ApplicationExtension;
 use Nette\Bridges\ApplicationDI\LatteExtension;
 use Nette\Bridges\ApplicationLatte\LatteFactory;
@@ -44,7 +48,7 @@ Assert::type(Exchange::class, $exchange);
 
 Assert::type(ExchangeManager::class, $container->getService('exchange.exchange.manager'));
 
-Assert::type(Number\Utils\Formats::class, $container->getService('exchange.formats'));
+Assert::type(Formats::class, $container->getService('exchange.formats'));
 
 Assert::type(Cache::class, $container->getService('exchange.cache'));
 
@@ -52,7 +56,7 @@ Assert::type(CacheFactory::class, $container->getService('exchange.cache.factory
 
 Assert::type(Exchange::class, $container->getService('exchange.exchange'));
 
-Assert::type(Number\Tax::class, $container->getService('exchange.vat'));
+Assert::type(Tax::class, $container->getService('exchange.vat'));
 
 Assert::type(Filters::class, $container->getService('exchange.filters'));
 
