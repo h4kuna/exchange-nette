@@ -40,7 +40,7 @@ exchangeExtension:
                 showUnitIfEmpty: false 
                 nbsp: true
                 unit: Kč
-                intOnly: -1 # -1 is default value
+                round: h4kuna\Format\Number\Round::BY_CEIL
                 
             usd:
                 unit: '$'
@@ -58,6 +58,7 @@ exchangeExtension:
         currencyTo: currencyTo
         vat: vat
         vatTo: vatTo
+
 ```
 
 ## Latte
