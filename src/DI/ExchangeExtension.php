@@ -7,6 +7,7 @@ use GuzzleHttp\Psr7\HttpFactory;
 use h4kuna\CriticalCache\CacheFactory;
 use h4kuna\Dir\TempDir;
 use h4kuna\Exchange;
+use h4kuna\Exchange\Driver\DriverAccessor;
 use h4kuna\Format;
 use Nette\DI;
 use Nette\Http\Request;
@@ -38,7 +39,7 @@ final class ExchangeExtension extends DI\CompilerExtension
 	{
 		$this->buildRatingListBuilder();
 
-		$this->buildRatingListCacheBuilder();
+		$this->buildRatingListCache();
 
 		$this->buildDriverAccessor();
 
@@ -57,6 +58,8 @@ final class ExchangeExtension extends DI\CompilerExtension
 		$this->buildFilters();
 
 		$this->buildVat();
+
+		$this->buildCacheEntity();
 	}
 
 
@@ -94,7 +97,7 @@ final class ExchangeExtension extends DI\CompilerExtension
 			->addDefinition($this->prefix('exchange.manager'))
 			->setFactory(Exchange\ExchangeManager::class)
 			->setArguments([
-				'ratingList' => $this->prefix('@rating.list.accessor'),
+				'ratingList' => $this->prefix('@rating.list'),
 			])
 			->addSetup('setParameter', [$this->config->managerParameter])
 			->setAutowired(false);
@@ -156,7 +159,7 @@ final class ExchangeExtension extends DI\CompilerExtension
 			->setFactory(Exchange\Exchange::class)
 			->setArguments([
 				'from' => $from,
-				'ratingList' => $this->prefix('@rating.list.accessor'),
+				'ratingList' => $this->prefix('@rating.list'),
 			]);
 	}
 
@@ -186,13 +189,12 @@ final class ExchangeExtension extends DI\CompilerExtension
 	private function buildRatingListAccessor(): void
 	{
 		$this->getContainerBuilder()
-			->addDefinition($this->prefix('rating.list.accessor'))
-			->setFactory(Exchange\RatingList\RatingListRequest::class)
+			->addDefinition($this->prefix('rating.list'))
+			->setType(Exchange\RatingList\RatingListInterface::class)
+			->setFactory(Exchange\RatingList\RatingList::class)
 			->setArguments([
-				'ratingList' => new DI\Definitions\Statement('?->create(?)', [
-					$this->prefix('@rating.list.cache.builder'),
-					$this->config->driver,
-				]),
+				'cacheEntity' => $this->prefix('@cache.entity'),
+				'ratingListCache' => $this->prefix('@rating.list.cache'),
 			])
 			->setAutowired(false);
 	}
@@ -202,21 +204,18 @@ final class ExchangeExtension extends DI\CompilerExtension
 	{
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('rating.list.builder'))
-			->setFactory(Exchange\RatingList\RatingListBuilder::class)
-			->setArguments([
-				'allowedCurrencies' => $this->config->strict ? Exchange\Utils::transformCurrencies(array_keys($this->config->currencies)) : [],
-			]);
+			->setFactory(Exchange\RatingList\RatingListBuilder::class);
 	}
 
 
-	private function buildRatingListCacheBuilder(): void
+	private function buildRatingListCache(): void
 	{
 		$this->getContainerBuilder()
-			->addDefinition($this->prefix('rating.list.cache.builder'))
+			->addDefinition($this->prefix('rating.list.cache'))
 			->setFactory(Exchange\RatingList\RatingListCache::class)
 			->setArguments([
+				'allowedCurrencies' => $this->config->strict ? Exchange\Utils::transformCurrencies(array_keys($this->config->currencies)) : [],
 				'cache' => $this->prefix('@cache'),
-				'ratingListBuilder' => $this->prefix('@rating.list.builder'),
 				'driverAccessor' => $this->prefix('@driver.accessor'),
 			]);
 	}
@@ -349,6 +348,15 @@ final class ExchangeExtension extends DI\CompilerExtension
 				[$this->prefix('@filters'), 'formatVatTo'],
 			]);
 		}
+	}
+
+
+	private function buildCacheEntity(): void
+	{
+		$this->getContainerBuilder()
+			->addDefinition($this->prefix('cache.entity'))
+			->setFactory(Exchange\RatingList\CacheEntity::class)
+			->setArguments([null, $this->config->driver]);
 	}
 
 }

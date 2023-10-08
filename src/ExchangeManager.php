@@ -2,7 +2,7 @@
 
 namespace h4kuna\Exchange;
 
-use h4kuna\Exchange\RatingList\Accessor;
+use h4kuna\Exchange\RatingList\RatingListInterface;
 use Nette;
 use Nette\Http;
 
@@ -21,7 +21,7 @@ class ExchangeManager
 
 
 	public function __construct(
-		private Accessor $ratingList,
+		private RatingListInterface $ratingList,
 		private Http\Request $request,
 		private Http\Response $response,
 	)
@@ -64,7 +64,7 @@ class ExchangeManager
 		}
 		$code = strtoupper($code);
 
-		if (!$this->ratingList->get()->offsetExists($code)) {
+		if (!$this->ratingList->get($code)) {
 			return self::EMPTY_CODE;
 		}
 
