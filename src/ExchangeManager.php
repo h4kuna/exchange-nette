@@ -64,7 +64,7 @@ class ExchangeManager
 		}
 		$code = strtoupper($code);
 
-		if (!$this->ratingList->get($code)) {
+		if (array_key_exists($code, $this->ratingList->all()) === false) {
 			return self::EMPTY_CODE;
 		}
 
