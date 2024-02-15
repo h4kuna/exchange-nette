@@ -181,7 +181,7 @@ final class ExchangeExtension extends DI\CompilerExtension
 	{
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('vat'))
-			->setFactory(Format\Number\Tax::class, [$this->config->vat])
+			->setFactory(Format\Number\Percentage::class, [$this->config->vat])
 			->setAutowired(false);
 	}
 

@@ -9,6 +9,7 @@ use h4kuna\Exchange\Exchange;
 use h4kuna\Exchange\ExchangeManager;
 use h4kuna\Exchange\Filters;
 use h4kuna\Format\Number\Formats;
+use h4kuna\Format\Number\Percentage;
 use h4kuna\Format\Number\Tax;
 use Nette\Bridges\ApplicationDI\ApplicationExtension;
 use Nette\Bridges\ApplicationDI\LatteExtension;
@@ -56,7 +57,7 @@ Assert::type(CacheFactory::class, $container->getService('exchange.cache.factory
 
 Assert::type(Exchange::class, $container->getService('exchange.exchange'));
 
-Assert::type(Tax::class, $container->getService('exchange.vat'));
+Assert::type(Percentage::class, $container->getService('exchange.vat'));
 
 Assert::type(Filters::class, $container->getService('exchange.filters'));
 

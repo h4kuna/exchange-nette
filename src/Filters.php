@@ -10,7 +10,7 @@ class Filters
 	public function __construct(
 		private Exchange $exchange,
 		private Format\Number\Formats $formats,
-		private Format\Number\Tax $tax,
+		private Format\Number\Percentage $tax,
 	)
 	{
 	}
@@ -47,7 +47,7 @@ class Filters
 
 	public function vat(float $number): float
 	{
-		return $this->tax->add($number);
+		return $this->tax->with($number);
 	}
 
 
