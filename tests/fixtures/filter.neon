@@ -7,4 +7,4 @@ exchange:
 			unit: 'USD'
 
 services:
-	exchange.rating.list: h4kuna\Exchange\Tests\RatingList()
+	exchange.source.download: h4kuna\Exchange\Tests\SourceDownloadMock

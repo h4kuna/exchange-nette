@@ -2,7 +2,6 @@
 
 namespace h4kuna\Exchange\DI;
 
-
 use h4kuna\Exchange\Driver\Cnb\Day;
 
 /**

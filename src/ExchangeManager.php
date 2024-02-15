@@ -2,7 +2,6 @@
 
 namespace h4kuna\Exchange;
 
-use h4kuna\Exchange\RatingList\RatingListInterface;
 use Nette;
 use Nette\Http;
 
@@ -21,17 +20,11 @@ class ExchangeManager
 
 
 	public function __construct(
-		private RatingListInterface $ratingList,
+		private Exchange $exchange,
 		private Http\Request $request,
 		private Http\Response $response,
 	)
 	{
-	}
-
-
-	public function setSession(Http\SessionSection $session): void
-	{
-		$this->session = $session;
 	}
 
 
@@ -64,7 +57,7 @@ class ExchangeManager
 		}
 		$code = strtoupper($code);
 
-		if (array_key_exists($code, $this->ratingList->all()) === false) {
+		if ($this->exchange->offsetExists($code) === false) {
 			return self::EMPTY_CODE;
 		}
 
@@ -72,50 +65,6 @@ class ExchangeManager
 		$this->saveSession($code);
 
 		return $code;
-	}
-
-
-	private function initCookie(): string
-	{
-		$code = $this->setCurrency($this->getCookie());
-		if ($code === self::EMPTY_CODE) {
-			$this->deleteCookie();
-		}
-
-		return $code;
-	}
-
-
-	private function initSession(): void
-	{
-		if ($this->session === null) {
-			return;
-		}
-		$this->setCurrency($this->getSession());
-	}
-
-
-	protected function getSession(): string
-	{
-		return (string) $this->session->{$this->parameter};
-	}
-
-
-	protected function getQuery(): string
-	{
-		$value = $this->request->getQuery($this->parameter);
-		assert($value === null || is_string($value));
-
-		return (string) $value;
-	}
-
-
-	protected function getCookie(): string
-	{
-		$value = $this->request->getCookie($this->parameter);
-		assert($value === null || is_string($value));
-
-		return (string) $value;
 	}
 
 
@@ -135,9 +84,59 @@ class ExchangeManager
 	}
 
 
+	protected function getQuery(): string
+	{
+		$value = $this->request->getQuery($this->parameter);
+		assert($value === null || is_string($value));
+
+		return (string) $value;
+	}
+
+
+	private function initCookie(): string
+	{
+		$code = $this->setCurrency($this->getCookie());
+		if ($code === self::EMPTY_CODE) {
+			$this->deleteCookie();
+		}
+
+		return $code;
+	}
+
+
+	protected function getCookie(): string
+	{
+		$value = $this->request->getCookie($this->parameter);
+		assert($value === null || is_string($value));
+
+		return (string) $value;
+	}
+
+
 	protected function deleteCookie(): void
 	{
 		$this->response->deleteCookie($this->parameter);
+	}
+
+
+	private function initSession(): void
+	{
+		if ($this->session === null) {
+			return;
+		}
+		$this->setCurrency($this->getSession());
+	}
+
+
+	protected function getSession(): string
+	{
+		return (string) $this->session->{$this->parameter};
+	}
+
+
+	public function setSession(Http\SessionSection $session): void
+	{
+		$this->session = $session;
 	}
 
 }

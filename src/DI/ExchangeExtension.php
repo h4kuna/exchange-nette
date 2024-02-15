@@ -7,7 +7,6 @@ use GuzzleHttp\Psr7\HttpFactory;
 use h4kuna\CriticalCache\CacheFactory;
 use h4kuna\Dir\TempDir;
 use h4kuna\Exchange;
-use h4kuna\Exchange\Driver\DriverAccessor;
 use h4kuna\Format;
 use Nette\DI;
 use Nette\Http\Request;
@@ -37,74 +36,87 @@ final class ExchangeExtension extends DI\CompilerExtension
 
 	public function loadConfiguration(): void
 	{
-		$this->buildRatingListBuilder();
-
 		$this->buildRatingListCache();
 
-		$this->buildDriverAccessor();
-
-		$this->buildCnb();
-
-		$this->buildEcb();
-
-		$this->buildRatingListAccessor();
-
 		$this->buildExchange();
-
-		$this->buildCache();
 
 		$this->buildFormats();
 
 		$this->buildFilters();
 
 		$this->buildVat();
-
-		$this->buildCacheEntity();
 	}
 
 
-	public function beforeCompile()
+	private function buildRatingListCache(): void
 	{
-		$this->buildBeforeClient();
-		$this->buildBeforeRequestFactory();
-		$this->buildBeforeExchangeManager();
-		$this->addDrivers();
+		$this->buildCache();
+		$this->buildSourceDownload();
 
-		$builder = $this->getContainerBuilder();
-		if ($builder->hasDefinition('application.application') && $builder->hasDefinition($this->prefix('exchange.manager'))) {
-			$application = $builder->getDefinition('application.application');
-			assert($application instanceof DI\Definitions\ServiceDefinition);
-			$application->addSetup(new DI\Definitions\Statement('$service->onPresenter[] = function ($application, $presenter) {?->init($presenter);}', [$this->prefix('@exchange.manager')]));
-		}
-
-		if ($builder->hasDefinition('latte.latteFactory')) {
-			$this->registerLatteFilters();
-		}
-	}
-
-
-	private function buildBeforeExchangeManager(): void
-	{
-		try {
-			$this->getContainerBuilder()->getByType(Request::class, true);
-			$this->getContainerBuilder()->getByType(Response::class, true);
-			$this->getContainerBuilder()->getByType(Session::class, true);
-		} catch (DI\MissingServiceException $e) {
-			return;
-		}
-
-		$exchangeManager = $this->getContainerBuilder()
-			->addDefinition($this->prefix('exchange.manager'))
-			->setFactory(Exchange\ExchangeManager::class)
+		$this->getContainerBuilder()
+			->addDefinition($this->prefix('rating.list.cache'))
+			->setFactory(Exchange\RatingList\RatingListCache::class)
 			->setArguments([
-				'ratingList' => $this->prefix('@rating.list'),
-			])
-			->addSetup('setParameter', [$this->config->managerParameter])
-			->setAutowired(false);
+				'cache' => $this->prefix('@cache'),
+				'sourceDownload' => $this->prefix('@source.download'),
+			]);
+	}
 
-		if ($this->config->session) {
-			$exchangeManager->addSetup('setSession', [new DI\Definitions\Statement('?->getSection(\'h4kuna.exchange\')', ['@session.session'])]);
-		}
+
+	private function buildCache(): void
+	{
+		$this->buildCacheFactory();
+
+		$this->getContainerBuilder()
+			->addDefinition($this->prefix('cache'))
+			->setFactory([$this->prefix('@cache.factory'), 'create'])
+			->setAutowired(false);
+	}
+
+
+	private function buildCacheFactory(): void
+	{
+		$this->getContainerBuilder()
+			->addDefinition($this->prefix('cache.factory'))
+			->setFactory(CacheFactory::class, [$this->config->tempDir])
+			->setAutowired(false);
+	}
+
+
+	private function buildSourceDownload(): void
+	{
+		$allowed = $this->config->strict ? Exchange\Utils::transformCurrencies(array_keys($this->config->currencies)) : [];
+		$this->getContainerBuilder()
+			->addDefinition($this->prefix('source.download'))
+			->setType(Exchange\Download\SourceDownloadInterface::class)
+			->setFactory(Exchange\Download\SourceDownload::class)
+			->setArguments([
+				'client' => $this->prefix('@http.client'),
+				'requestFactory' => $this->prefix('@http.request.factory'),
+				'allowedCurrencies' => $allowed,
+			]);
+	}
+
+
+	private function buildExchange(): void
+	{
+		$from = array_key_first($this->config->currencies);
+
+		$this->getContainerBuilder()
+			->addDefinition($this->prefix('exchange'))
+			->setFactory(Exchange\Exchange::class)
+			->setArguments([
+				'from' => $from,
+				'ratingList' => new DI\Definitions\Statement([
+					$this->prefix('@rating.list.cache'),
+					'build',
+				], [
+					new DI\Definitions\Statement(Exchange\RatingList\CacheEntity::class, [
+						null,
+						new DI\Definitions\Statement($this->config->driver),
+					]),
+				]),
+			]);
 	}
 
 
@@ -130,40 +142,6 @@ final class ExchangeExtension extends DI\CompilerExtension
 	}
 
 
-	private function buildCache(): void
-	{
-		$this->buildCacheFactory();
-
-		$this->getContainerBuilder()
-			->addDefinition($this->prefix('cache'))
-			->setFactory([$this->prefix('@cache.factory'), 'create'])
-			->setAutowired(false);
-	}
-
-
-	private function buildCacheFactory(): void
-	{
-		$this->getContainerBuilder()
-			->addDefinition($this->prefix('cache.factory'))
-			->setFactory(CacheFactory::class, [$this->config->tempDir])
-			->setAutowired(false);
-	}
-
-
-	private function buildExchange(): void
-	{
-		$from = array_key_first($this->config->currencies);
-
-		$this->getContainerBuilder()
-			->addDefinition($this->prefix('exchange'))
-			->setFactory(Exchange\Exchange::class)
-			->setArguments([
-				'from' => $from,
-				'ratingList' => $this->prefix('@rating.list'),
-			]);
-	}
-
-
 	private function buildFilters(): void
 	{
 		$this->getContainerBuilder()
@@ -186,72 +164,22 @@ final class ExchangeExtension extends DI\CompilerExtension
 	}
 
 
-	private function buildRatingListAccessor(): void
+	public function beforeCompile()
 	{
-		$this->getContainerBuilder()
-			->addDefinition($this->prefix('rating.list'))
-			->setType(Exchange\RatingList\RatingListInterface::class)
-			->setFactory(Exchange\RatingList\RatingList::class)
-			->setArguments([
-				'cacheEntity' => $this->prefix('@cache.entity'),
-				'ratingListCache' => $this->prefix('@rating.list.cache'),
-			])
-			->setAutowired(false);
-	}
+		$this->buildBeforeClient();
+		$this->buildBeforeRequestFactory();
+		$this->buildBeforeExchangeManager();
 
+		$builder = $this->getContainerBuilder();
+		if ($builder->hasDefinition('application.application') && $builder->hasDefinition($this->prefix('exchange.manager'))) {
+			$application = $builder->getDefinition('application.application');
+			assert($application instanceof DI\Definitions\ServiceDefinition);
+			$application->addSetup(new DI\Definitions\Statement('$service->onPresenter[] = function ($application, $presenter) {?->init($presenter);}', [$this->prefix('@exchange.manager')]));
+		}
 
-	private function buildRatingListBuilder(): void
-	{
-		$this->getContainerBuilder()
-			->addDefinition($this->prefix('rating.list.builder'))
-			->setFactory(Exchange\RatingList\RatingListBuilder::class);
-	}
-
-
-	private function buildRatingListCache(): void
-	{
-		$this->getContainerBuilder()
-			->addDefinition($this->prefix('rating.list.cache'))
-			->setFactory(Exchange\RatingList\RatingListCache::class)
-			->setArguments([
-				'allowedCurrencies' => $this->config->strict ? Exchange\Utils::transformCurrencies(array_keys($this->config->currencies)) : [],
-				'cache' => $this->prefix('@cache'),
-				'driverAccessor' => $this->prefix('@driver.accessor'),
-			]);
-	}
-
-
-	private function buildCnb(): void
-	{
-		$this->getContainerBuilder()
-			->addDefinition($this->prefix('driver.cnb.day'))
-			->setFactory(Exchange\Driver\Cnb\Day::class)
-			->setArguments([
-				'client' => $this->prefix('@http.client'),
-				'requestFactory' => $this->prefix('@http.request.factory'),
-			])
-			->setAutowired(false);
-	}
-
-
-	private function buildEcb(): void
-	{
-		$this->getContainerBuilder()
-			->addDefinition($this->prefix('driver.ecb.day'))
-			->setFactory(Exchange\Driver\Ecb\Day::class)
-			->setArguments([
-				'client' => $this->prefix('@http.client'),
-				'requestFactory' => $this->prefix('@http.request.factory'),
-			])
-			->setAutowired(false);
-	}
-
-
-	private function buildDriverAccessor(): void
-	{
-		$this->getContainerBuilder()
-			->addLocatorDefinition($this->prefix('driver.accessor'))
-			->setImplement(Exchange\Driver\DriverAccessor::class);
+		if ($builder->hasDefinition('latte.latteFactory')) {
+			$this->registerLatteFilters();
+		}
 	}
 
 
@@ -300,20 +228,26 @@ final class ExchangeExtension extends DI\CompilerExtension
 	}
 
 
-	private function addDrivers(): void
+	private function buildBeforeExchangeManager(): void
 	{
-		$definitions = $this->getContainerBuilder()
-			->findByType(Exchange\Driver\Driver::class);
-
-		$drivers = [];
-		foreach ($definitions as $definition) {
-			$drivers[$definition->getType()] = '@' . $definition->getName();
+		$builder = $this->getContainerBuilder();
+		try {
+			$builder->getByType(Request::class, true);
+			$builder->getByType(Response::class, true);
+			$builder->getByType(Session::class, true);
+		} catch (DI\MissingServiceException $e) {
+			return;
 		}
 
-		$definition = $this->getContainerBuilder()->getDefinition($this->prefix('driver.accessor'));
-		assert($definition instanceof DI\Definitions\LocatorDefinition);
+		$exchangeManager = $builder
+			->addDefinition($this->prefix('exchange.manager'))
+			->setFactory(Exchange\ExchangeManager::class)
+			->addSetup('setParameter', [$this->config->managerParameter])
+			->setAutowired(false);
 
-		$definition->setReferences($drivers);
+		if ($this->config->session) {
+			$exchangeManager->addSetup('setSession', [new DI\Definitions\Statement('?->getSection(\'h4kuna.exchange\')', ['@session.session'])]);
+		}
 	}
 
 
@@ -348,15 +282,6 @@ final class ExchangeExtension extends DI\CompilerExtension
 				[$this->prefix('@filters'), 'formatVatTo'],
 			]);
 		}
-	}
-
-
-	private function buildCacheEntity(): void
-	{
-		$this->getContainerBuilder()
-			->addDefinition($this->prefix('cache.entity'))
-			->setFactory(Exchange\RatingList\CacheEntity::class)
-			->setArguments([null, $this->config->driver]);
 	}
 
 }

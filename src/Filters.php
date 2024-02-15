@@ -16,26 +16,15 @@ class Filters
 	}
 
 
-	public function change(float $number, ?string $from = null, ?string $to = null): float
-	{
-		return $this->exchange->change($number, $from, $to);
-	}
-
-
 	public function changeTo(float $number, ?string $to = null): float
 	{
 		return $this->change($number, null, $to);
 	}
 
 
-	/**
-	 * Count and format number.
-	 */
-	public function format(float $number, ?string $from = null, ?string $to = null): string
+	public function change(float $number, ?string $from = null, ?string $to = null): float
 	{
-		$data = $this->exchange->transfer($number, $from, $to);
-
-		return $this->formats->get($data[1]->code)->format($data[0]);
+		return $this->exchange->change($number, $from, $to);
 	}
 
 
@@ -45,9 +34,20 @@ class Filters
 	}
 
 
-	public function vat(float $number): float
+	/**
+	 * Count and format number.
+	 */
+	public function format(float $number, ?string $from = null, ?string $to = null): string
 	{
-		return $this->tax->with($number);
+		$amount = $this->exchange->change($number, $from, $to);
+
+		return $this->formats->get($this->exchange->getTo($to)->code)->format($amount);
+	}
+
+
+	public function formatVatTo(float $number, ?string $to): string
+	{
+		return $this->formatVat($number, null, $to);
 	}
 
 
@@ -57,9 +57,9 @@ class Filters
 	}
 
 
-	public function formatVatTo(float $number, ?string $to): string
+	public function vat(float $number): float
 	{
-		return $this->formatVat($number, null, $to);
+		return $this->tax->with($number);
 	}
 
 }

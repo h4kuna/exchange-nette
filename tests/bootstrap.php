@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
-require __DIR__ . '/fixtures/RatingList.php';
+require __DIR__ . '/fixtures/SourceDownloadMock.php';
 
 define('TEMP_DIR', __DIR__ . '/temp');
 

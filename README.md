@@ -11,7 +11,12 @@ This library is extension for Nette Framework and for this [Exchange](//github.c
 ## Installation
 Simple via composer 
 ```sh
-$ composer require h4kuna/exchange-nette
+composer require h4kuna/exchange-nette
+```
+
+optional dependencies
+```sh
+composer require h4kuna/exchange-nette guzzlehttp/guzzle malkusch/lock nette/application nette/caching
 ```
 
 ## Registration

@@ -10,7 +10,6 @@ use h4kuna\Exchange\ExchangeManager;
 use h4kuna\Exchange\Filters;
 use h4kuna\Format\Number\Formats;
 use h4kuna\Format\Number\Percentage;
-use h4kuna\Format\Number\Tax;
 use Nette\Bridges\ApplicationDI\ApplicationExtension;
 use Nette\Bridges\ApplicationDI\LatteExtension;
 use Nette\Bridges\ApplicationLatte\LatteFactory;
