@@ -2,8 +2,8 @@
 
 namespace h4kuna\Exchange\Tests;
 
-use h4kuna\CriticalCache\Cache;
-use h4kuna\CriticalCache\CacheFactory;
+use h4kuna\CriticalCache\PSR16\Locking\CacheLock;
+use h4kuna\CriticalCache\PSR16\Locking\CacheLockingFactory;
 use h4kuna\Exchange\DI\ExchangeExtension;
 use h4kuna\Exchange\Exchange;
 use h4kuna\Exchange\ExchangeManager;
@@ -50,9 +50,9 @@ Assert::type(ExchangeManager::class, $container->getService('exchange.exchange.m
 
 Assert::type(Formats::class, $container->getService('exchange.formats'));
 
-Assert::type(Cache::class, $container->getService('exchange.cache'));
+Assert::type(CacheLock::class, $container->getService('exchange.cache'));
 
-Assert::type(CacheFactory::class, $container->getService('exchange.cache.factory'));
+Assert::type(CacheLockingFactory::class, $container->getService('exchange.cache.locking.factory'));
 
 Assert::type(Exchange::class, $container->getService('exchange.exchange'));
 

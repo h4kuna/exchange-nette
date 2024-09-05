@@ -41,7 +41,7 @@ class Filters
 	{
 		$amount = $this->exchange->change($number, $from, $to);
 
-		return $this->formats->get($this->exchange->getTo($to)->code)->format($amount);
+		return $this->formats->get($this->exchange->getTo($to)->getCode())->format($amount);
 	}
 
 

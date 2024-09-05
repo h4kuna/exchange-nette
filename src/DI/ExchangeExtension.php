@@ -4,7 +4,9 @@ namespace h4kuna\Exchange\DI;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\HttpFactory;
-use h4kuna\CriticalCache\CacheFactory;
+use h4kuna\CriticalCache\PSR16\CacheLockingFactoryInterface;
+use h4kuna\CriticalCache\PSR16\Locking\CacheLockingFactory;
+use h4kuna\Dir\Dir;
 use h4kuna\Dir\TempDir;
 use h4kuna\Exchange;
 use h4kuna\Format;
@@ -69,7 +71,7 @@ final class ExchangeExtension extends DI\CompilerExtension
 
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('cache'))
-			->setFactory([$this->prefix('@cache.factory'), 'create'])
+			->setFactory([$this->prefix('@cache.locking.factory'), 'create'])
 			->setAutowired(false);
 	}
 
@@ -77,8 +79,9 @@ final class ExchangeExtension extends DI\CompilerExtension
 	private function buildCacheFactory(): void
 	{
 		$this->getContainerBuilder()
-			->addDefinition($this->prefix('cache.factory'))
-			->setFactory(CacheFactory::class, [$this->config->tempDir])
+			->addDefinition($this->prefix('cache.locking.factory'))
+			->setType(CacheLockingFactoryInterface::class)
+			->setCreator(CacheLockingFactory::class, [new DI\Definitions\Statement(Dir::class, [$this->config->tempDir])])
 			->setAutowired(false);
 	}
 
