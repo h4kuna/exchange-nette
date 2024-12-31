@@ -12,7 +12,7 @@
 		}
 	],
 	"require": {
-		"php": ">=8.0",
+		"php": ">=8.2",
 		"h4kuna/dir": "^0.1.3",
 		"h4kuna/exchange": "^v7.1.3",
 		"h4kuna/number-format": "^6.0.4",
@@ -24,7 +24,7 @@
 	"require-dev": {
 		"guzzlehttp/guzzle": "^7.5",
 		"guzzlehttp/psr7": "^2.0",
-		"malkusch/lock": "^2.2",
+		"malkusch/lock": "^3.0",
 		"nette/application": "^3.1.2",
 		"nette/caching": "^3.2",
 		"nette/tester": "^2.5",
