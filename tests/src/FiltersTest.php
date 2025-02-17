@@ -31,7 +31,6 @@ assert($formats instanceof h4kuna\Format\Number\Formats);
 $filters = $container->getService('exchange.filters');
 assert($filters instanceof Exchange\Filters);
 $exchange = $container->getByType(Exchange\Exchange::class);
-assert($exchange instanceof Exchange\Exchange);
 
 Assert::same('EUR', $exchange->getFrom()->getCode());
 

@@ -27,7 +27,10 @@ final class ExchangeExtension extends DI\CompilerExtension
 
 	public function getConfigSchema(): Schema
 	{
-		$tempDir = new TempDir($this->getContainerBuilder()->parameters['tempDir'] ?? '');
+		$path = $this->getContainerBuilder()->parameters['tempDir'] ?? '';
+		assert(is_string($path));
+
+		$tempDir = new TempDir($path);
 
 		$config = new Config;
 		$config->tempDir = $tempDir->create()->getDir();
@@ -127,10 +130,7 @@ final class ExchangeExtension extends DI\CompilerExtension
 	{
 		$formatsData = [];
 		foreach ($this->config->currencies as $code => $entity) {
-			if (is_array($entity)) {
-				$entity = new DI\Definitions\Statement(Format\Number\Formatters\NumberFormatter::class, $entity);
-			}
-			$formatsData[strtoupper($code)] = $entity;
+			$formatsData[strtoupper($code)] = new DI\Definitions\Statement(Format\Number\Formatters\NumberFormatter::class, $entity);
 		}
 
 		$formats = $this->getContainerBuilder()

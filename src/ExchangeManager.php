@@ -130,7 +130,10 @@ class ExchangeManager
 
 	protected function getSession(): string
 	{
-		return (string) $this->session->{$this->parameter};
+		$value = $this->session->{$this->parameter};
+		assert($value === null || is_string($value));
+
+		return (string) $value;
 	}
 
 
