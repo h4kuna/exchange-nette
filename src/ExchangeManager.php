@@ -108,7 +108,7 @@ class ExchangeManager
 	{
 		$value = $this->request->getCookie($this->parameter);
 
-		return (string) $value;
+		return is_string($value) ? $value : '';
 	}
 
 	protected function deleteCookie(): void
