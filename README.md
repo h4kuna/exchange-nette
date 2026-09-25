@@ -2,7 +2,7 @@ Exchange extension for Nette framework
 -------
 [![Downloads this Month](https://img.shields.io/packagist/dm/h4kuna/exchange-nette.svg)](https://packagist.org/packages/h4kuna/exchange-nette)
 [![Latest Stable Version](https://poser.pugx.org/h4kuna/exchange-nette/v/stable?format=flat)](https://packagist.org/packages/h4kuna/exchange-nette)
-[![Coverage Status](https://coveralls.io/repos/github/h4kuna/exchange-nette/badge.svg?branch=master)](https://coveralls.io/github/h4kuna/exchange-nette?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/h4kuna/exchange-nette/badge.svg?branch=main)](https://coveralls.io/github/h4kuna/exchange-nette?branch=main)
 [![Total Downloads](https://poser.pugx.org/h4kuna/exchange-nette/downloads?format=flat)](https://packagist.org/packages/h4kuna/exchange-nette)
 [![License](https://poser.pugx.org/h4kuna/exchange-nette/license?format=flat)](https://packagist.org/packages/h4kuna/exchange-nette)
 
