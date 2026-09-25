@@ -6,6 +6,8 @@ Exchange extension for Nette framework
 [![Total Downloads](https://poser.pugx.org/h4kuna/exchange-nette/downloads?format=flat)](https://packagist.org/packages/h4kuna/exchange-nette)
 [![License](https://poser.pugx.org/h4kuna/exchange-nette/license?format=flat)](https://packagist.org/packages/h4kuna/exchange-nette)
 
+Part of the [h4kuna PHP libraries](https://github.com/h4kuna/library), see the overview of all packages.
+
 This library is extension for Nette Framework and for this [Exchange](//github.com/h4kuna/exchange).
 
 ## Installation
