@@ -1,15 +1,19 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
+
+use Nette\Utils\FileSystem;
+use Tester\Environment;
+use Tracy\Debugger;
 
 require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/fixtures/SourceDownloadMock.php';
 
 define('TEMP_DIR', __DIR__ . '/temp');
 
-Nette\Utils\FileSystem::createDir(TEMP_DIR);
+FileSystem::createDir(TEMP_DIR);
 
 if (defined('__PHPSTAN_RUNNING__') === false) {
-	Tester\Environment::setup();
+	Environment::setup();
 }
 
 
-Tracy\Debugger::enable(false, TEMP_DIR);
+Debugger::enable(false, TEMP_DIR);

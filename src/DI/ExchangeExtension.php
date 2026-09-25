@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 
 namespace h4kuna\Exchange\DI;
 
@@ -8,21 +8,39 @@ use h4kuna\CriticalCache\PSR16\CacheLockingFactoryInterface;
 use h4kuna\CriticalCache\PSR16\Locking\CacheLockingFactory;
 use h4kuna\Dir\Dir;
 use h4kuna\Dir\TempDir;
-use h4kuna\Exchange;
-use h4kuna\Format;
-use Nette\DI;
+use h4kuna\Exchange\Download\SourceDownload;
+use h4kuna\Exchange\Download\SourceDownloadInterface;
+use h4kuna\Exchange\Exceptions\MissingDependencyException;
+use h4kuna\Exchange\Exchange;
+use h4kuna\Exchange\ExchangeManager;
+use h4kuna\Exchange\Filters;
+use h4kuna\Exchange\RatingList\CacheEntity;
+use h4kuna\Exchange\RatingList\RatingListCache;
+use h4kuna\Exchange\Utils;
+use h4kuna\Format\Number\Formats;
+use h4kuna\Format\Number\Formatters\NumberFormatter;
+use h4kuna\Format\Number\Percentage;
+use Nette\DI\CompilerExtension;
+use Nette\DI\Definitions\FactoryDefinition;
+use Nette\DI\Definitions\ServiceDefinition;
+use Nette\DI\Definitions\Statement;
+use Nette\DI\MissingServiceException;
 use Nette\Http\Request;
 use Nette\Http\Response;
 use Nette\Http\Session;
 use Nette\Schema\Expect;
 use Nette\Schema\Schema;
-use Psr\Http;
 use Psr\Http\Message\RequestFactoryInterface;
+use function array_key_first;
+use function array_keys;
+use function assert;
+use function is_string;
+use function strtoupper;
 
 /**
  * @property-read Config $config
  */
-final class ExchangeExtension extends DI\CompilerExtension
+final class ExchangeExtension extends CompilerExtension
 {
 
 	public function getConfigSchema(): Schema
@@ -32,12 +50,11 @@ final class ExchangeExtension extends DI\CompilerExtension
 
 		$tempDir = new TempDir($path);
 
-		$config = new Config;
+		$config = new Config();
 		$config->tempDir = $tempDir->create()->getDir();
 
 		return Expect::from($config);
 	}
-
 
 	public function loadConfiguration(): void
 	{
@@ -52,7 +69,6 @@ final class ExchangeExtension extends DI\CompilerExtension
 		$this->buildVat();
 	}
 
-
 	private function buildRatingListCache(): void
 	{
 		$this->buildCache();
@@ -60,13 +76,12 @@ final class ExchangeExtension extends DI\CompilerExtension
 
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('rating.list.cache'))
-			->setFactory(Exchange\RatingList\RatingListCache::class)
+			->setFactory(RatingListCache::class)
 			->setArguments([
 				'cache' => $this->prefix('@cache'),
 				'sourceDownload' => $this->prefix('@source.download'),
 			]);
 	}
-
 
 	private function buildCache(): void
 	{
@@ -78,24 +93,22 @@ final class ExchangeExtension extends DI\CompilerExtension
 			->setAutowired(false);
 	}
 
-
 	private function buildCacheFactory(): void
 	{
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('cache.locking.factory'))
 			->setType(CacheLockingFactoryInterface::class)
-			->setCreator(CacheLockingFactory::class, [new DI\Definitions\Statement(Dir::class, [$this->config->tempDir])])
+			->setCreator(CacheLockingFactory::class, [new Statement(Dir::class, [$this->config->tempDir])])
 			->setAutowired(false);
 	}
 
-
 	private function buildSourceDownload(): void
 	{
-		$allowed = $this->config->strict ? Exchange\Utils::transformCurrencies(array_keys($this->config->currencies)) : [];
+		$allowed = $this->config->strict ? Utils::transformCurrencies(array_keys($this->config->currencies)) : [];
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('source.download'))
-			->setType(Exchange\Download\SourceDownloadInterface::class)
-			->setFactory(Exchange\Download\SourceDownload::class)
+			->setType(SourceDownloadInterface::class)
+			->setFactory(SourceDownload::class)
 			->setArguments([
 				'client' => $this->prefix('@http.client'),
 				'requestFactory' => $this->prefix('@http.request.factory'),
@@ -103,39 +116,37 @@ final class ExchangeExtension extends DI\CompilerExtension
 			]);
 	}
 
-
 	private function buildExchange(): void
 	{
 		$from = array_key_first($this->config->currencies);
 
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('exchange'))
-			->setFactory(Exchange\Exchange::class)
+			->setFactory(Exchange::class)
 			->setArguments([
 				'from' => $from,
-				'ratingList' => new DI\Definitions\Statement([
+				'ratingList' => new Statement([
 					$this->prefix('@rating.list.cache'),
 					'build',
 				], [
-					new DI\Definitions\Statement(Exchange\RatingList\CacheEntity::class, [
+					new Statement(CacheEntity::class, [
 						null,
-						new DI\Definitions\Statement($this->config->driver),
+						new Statement($this->config->driver),
 					]),
 				]),
 			]);
 	}
 
-
 	private function buildFormats(): void
 	{
 		$formatsData = [];
 		foreach ($this->config->currencies as $code => $entity) {
-			$formatsData[strtoupper($code)] = new DI\Definitions\Statement(Format\Number\Formatters\NumberFormatter::class, $entity);
+			$formatsData[strtoupper($code)] = new Statement(NumberFormatter::class, $entity);
 		}
 
 		$formats = $this->getContainerBuilder()
 			->addDefinition($this->prefix('formats'))
-			->setFactory(Format\Number\Formats::class, [$formatsData])
+			->setFactory(Formats::class, [$formatsData])
 			->setAutowired(false);
 
 		$defaultFormat = $this->config->defaultFormat;
@@ -144,12 +155,11 @@ final class ExchangeExtension extends DI\CompilerExtension
 		}
 	}
 
-
 	private function buildFilters(): void
 	{
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('filters'))
-			->setFactory(Exchange\Filters::class, [
+			->setFactory(Filters::class, [
 				'exchange' => $this->prefix('@exchange'),
 				'formats' => $this->prefix('@formats'),
 				'tax' => $this->prefix('@vat'),
@@ -157,17 +167,15 @@ final class ExchangeExtension extends DI\CompilerExtension
 			->setAutowired(false);
 	}
 
-
 	private function buildVat(): void
 	{
 		$this->getContainerBuilder()
 			->addDefinition($this->prefix('vat'))
-			->setFactory(Format\Number\Percentage::class, [$this->config->vat])
+			->setFactory(Percentage::class, [$this->config->vat])
 			->setAutowired(false);
 	}
 
-
-	public function beforeCompile()
+	public function beforeCompile(): void
 	{
 		$this->buildBeforeClient();
 		$this->buildBeforeRequestFactory();
@@ -176,8 +184,8 @@ final class ExchangeExtension extends DI\CompilerExtension
 		$builder = $this->getContainerBuilder();
 		if ($builder->hasDefinition('application.application') && $builder->hasDefinition($this->prefix('exchange.manager'))) {
 			$application = $builder->getDefinition('application.application');
-			assert($application instanceof DI\Definitions\ServiceDefinition);
-			$application->addSetup(new DI\Definitions\Statement('$service->onPresenter[] = function ($application, $presenter) {?->init($presenter);}', [$this->prefix('@exchange.manager')]));
+			assert($application instanceof ServiceDefinition);
+			$application->addSetup(new Statement('$service->onPresenter[] = function ($application, $presenter) {?->init($presenter);}', [$this->prefix('@exchange.manager')]));
 		}
 
 		if ($builder->hasDefinition('latte.latteFactory')) {
@@ -185,16 +193,21 @@ final class ExchangeExtension extends DI\CompilerExtension
 		}
 	}
 
-
 	private function buildBeforeClient(): void
 	{
-		$this->buildAndCheckIfExists('http.client', Client::class, function (): void {
-			Exchange\Exceptions\MissingDependencyException::guzzleClient();
+		$this->buildAndCheckIfExists('http.client', Client::class, static function (): void {
+			MissingDependencyException::guzzleClient();
 		});
 	}
 
-
-	private function buildAndCheckIfExists(string $serviceName, string $type, callable $factory = null): void
+	/**
+	 * @param class-string $type
+	 */
+	private function buildAndCheckIfExists(
+		string $serviceName,
+		string $type,
+		?callable $factory = null,
+	): void
 	{
 		$builder = $this->getContainerBuilder();
 
@@ -214,22 +227,19 @@ final class ExchangeExtension extends DI\CompilerExtension
 			}
 		} else {
 			$service = array_key_first($definitions);
-			assert(is_string($service));
 			$builder->addAlias($serviceName, $service);
 		}
 	}
 
-
 	private function buildBeforeRequestFactory(): void
 	{
-		$this->buildAndCheckIfExists('http.request.factory', RequestFactoryInterface::class, function (
-			DI\Definitions\ServiceDefinition $definition,
-		) {
-			Exchange\Exceptions\MissingDependencyException::guzzleFactory();
+		$this->buildAndCheckIfExists('http.request.factory', RequestFactoryInterface::class, static function (
+			ServiceDefinition $definition,
+		): void {
+			MissingDependencyException::guzzleFactory();
 			$definition->setFactory(HttpFactory::class);
 		});
 	}
-
 
 	private function buildBeforeExchangeManager(): void
 	{
@@ -238,27 +248,26 @@ final class ExchangeExtension extends DI\CompilerExtension
 			$builder->getByType(Request::class, true);
 			$builder->getByType(Response::class, true);
 			$builder->getByType(Session::class, true);
-		} catch (DI\MissingServiceException $e) {
+		} catch (MissingServiceException $e) {
 			return;
 		}
 
 		$exchangeManager = $builder
 			->addDefinition($this->prefix('exchange.manager'))
-			->setFactory(Exchange\ExchangeManager::class)
+			->setFactory(ExchangeManager::class)
 			->addSetup('setParameter', [$this->config->managerParameter])
 			->setAutowired(false);
 
 		if ($this->config->session) {
-			$exchangeManager->addSetup('setSession', [new DI\Definitions\Statement('?->getSection(\'h4kuna.exchange\')', ['@session.session'])]);
+			$exchangeManager->addSetup('setSession', [new Statement('?->getSection(\'h4kuna.exchange\')', ['@session.session'])]);
 		}
 	}
-
 
 	private function registerLatteFilters(): void
 	{
 		$latte = $this->getContainerBuilder()
 			->getDefinition('latte.latteFactory');
-		assert($latte instanceof DI\Definitions\FactoryDefinition);
+		assert($latte instanceof FactoryDefinition);
 		$latte = $latte->getResultDefinition();
 
 		if ($this->config->filters['currency']) {

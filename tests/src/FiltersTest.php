@@ -1,17 +1,20 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 
 namespace h4kuna\Exchange\Tests;
 
-use h4kuna;
-use h4kuna\Exchange;
 use h4kuna\Exchange\DI\ExchangeExtension;
-use Nette\DI;
+use h4kuna\Exchange\Exchange;
+use h4kuna\Exchange\Filters;
+use h4kuna\Format\Number\Formats;
+use Nette\DI\Compiler;
+use Nette\DI\ContainerLoader;
 use Tester\Assert;
+use function assert;
 
 require __DIR__ . '/../bootstrap.php';
 
-$loader = new DI\ContainerLoader(TEMP_DIR, true);
-$class = $loader->load(function (DI\Compiler $compiler): void {
+$loader = new ContainerLoader(TEMP_DIR, true);
+$class = $loader->load(static function (Compiler $compiler): null {
 	$compiler->addExtension('exchange', new ExchangeExtension());
 
 	$compiler->addConfig([
@@ -21,16 +24,17 @@ $class = $loader->load(function (DI\Compiler $compiler): void {
 	]);
 
 	$compiler->loadConfig(__DIR__ . '/../fixtures/filter.neon');
+
+	return null;
 }, __FILE__);
 
 $container = new $class();
-assert($container instanceof DI\Container);
 
 $formats = $container->getService('exchange.formats');
-assert($formats instanceof h4kuna\Format\Number\Formats);
+assert($formats instanceof Formats);
 $filters = $container->getService('exchange.filters');
-assert($filters instanceof Exchange\Filters);
-$exchange = $container->getByType(Exchange\Exchange::class);
+assert($filters instanceof Filters);
+$exchange = $container->getByType(Exchange::class);
 
 Assert::same('EUR', $exchange->getFrom()->getCode());
 

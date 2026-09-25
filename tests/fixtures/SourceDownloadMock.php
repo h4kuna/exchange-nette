@@ -1,7 +1,8 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 
 namespace h4kuna\Exchange\Tests;
 
+use DateTimeImmutable;
 use DateTimeInterface;
 use h4kuna\Exchange\Currency\Property;
 use h4kuna\Exchange\Download\SourceDownloadInterface;
@@ -10,9 +11,10 @@ use h4kuna\Exchange\RatingList\RatingList;
 
 final class SourceDownloadMock implements SourceDownloadInterface
 {
+
 	public function execute(
 		Source $sourceExchange,
-		?DateTimeInterface $date
+		?DateTimeInterface $date,
 	): RatingList
 	{
 		$list = [
@@ -21,7 +23,7 @@ final class SourceDownloadMock implements SourceDownloadInterface
 			'USD' => new Property(1, 20.0, 'USD'),
 		];
 
-		return new RatingList(new \DateTimeImmutable(), null, null, $list);
+		return new RatingList(new DateTimeImmutable(), null, null, $list);
 	}
 
 }

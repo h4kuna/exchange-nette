@@ -1,38 +1,44 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 
 namespace h4kuna\Exchange;
 
-use Nette;
-use Nette\Http;
+use Nette\Http\Request;
+use Nette\Http\Response;
+use Nette\Http\SessionSection;
+use Nette\SmartObject;
+use function assert;
+use function is_string;
+use function strtoupper;
 
 class ExchangeManager
 {
-	use Nette\SmartObject;
+
+	use SmartObject;
 
 	private const EMPTY_CODE = '';
 
-	/** @var array<callable> */
+	/**
+	 * @var array<callable>
+	 */
 	public array $onChangeCurrency;
 
-	protected ?Http\SessionSection $session = null;
+	protected ?SessionSection $session = null;
 
 	protected string $parameter = 'currency';
 
 
 	public function __construct(
 		private Exchange $exchange,
-		private Http\Request $request,
-		private Http\Response $response,
+		private Request $request,
+		private Response $response,
 	)
 	{
 	}
-
 
 	public function setParameter(string $parameter): void
 	{
 		$this->parameter = $parameter;
 	}
-
 
 	/**
 	 * @param mixed $presenter
@@ -48,7 +54,6 @@ class ExchangeManager
 			$this->onChangeCurrency($presenter, $code);
 		}
 	}
-
 
 	public function setCurrency(string $code): string
 	{
@@ -67,12 +72,10 @@ class ExchangeManager
 		return $code;
 	}
 
-
 	protected function saveCookie(string $code): void
 	{
 		$this->response->setCookie($this->parameter, $code, '+6 month');
 	}
-
 
 	protected function saveSession(string $code): void
 	{
@@ -83,7 +86,6 @@ class ExchangeManager
 		$this->session->setExpiration('+1 days');
 	}
 
-
 	protected function getQuery(): string
 	{
 		$value = $this->request->getQuery($this->parameter);
@@ -91,7 +93,6 @@ class ExchangeManager
 
 		return (string) $value;
 	}
-
 
 	private function initCookie(): string
 	{
@@ -103,21 +104,17 @@ class ExchangeManager
 		return $code;
 	}
 
-
 	protected function getCookie(): string
 	{
 		$value = $this->request->getCookie($this->parameter);
-		assert($value === null || is_string($value));
 
 		return (string) $value;
 	}
-
 
 	protected function deleteCookie(): void
 	{
 		$this->response->deleteCookie($this->parameter);
 	}
-
 
 	private function initSession(): void
 	{
@@ -127,7 +124,6 @@ class ExchangeManager
 		$this->setCurrency($this->getSession());
 	}
 
-
 	protected function getSession(): string
 	{
 		$value = $this->session->{$this->parameter};
@@ -136,8 +132,7 @@ class ExchangeManager
 		return (string) $value;
 	}
 
-
-	public function setSession(Http\SessionSection $session): void
+	public function setSession(SessionSection $session): void
 	{
 		$this->session = $session;
 	}

@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 
 namespace h4kuna\Exchange\Tests;
 
@@ -13,19 +13,22 @@ use h4kuna\Format\Number\Percentage;
 use Nette\Bridges\ApplicationDI\ApplicationExtension;
 use Nette\Bridges\ApplicationDI\LatteExtension;
 use Nette\Bridges\ApplicationLatte\LatteFactory;
-use Nette\Bridges\HttpDI;
-use Nette\DI;
+use Nette\Bridges\HttpDI\HttpExtension;
+use Nette\Bridges\HttpDI\SessionExtension;
+use Nette\DI\Compiler;
+use Nette\DI\ContainerLoader;
 use Nette\Routing\SimpleRouter;
 use Tester\Assert;
+use function assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
-$loader = new DI\ContainerLoader(TEMP_DIR, true);
-$class = $loader->load(function (DI\Compiler $compiler): void {
+$loader = new ContainerLoader(TEMP_DIR, true);
+$class = $loader->load(static function (Compiler $compiler): null {
 	$compiler->addExtension('exchange', new ExchangeExtension());
-	$compiler->addExtension('http', new HttpDI\HttpExtension());
+	$compiler->addExtension('http', new HttpExtension());
 	$compiler->addExtension('latte', new LatteExtension(TEMP_DIR));
-	$compiler->addExtension('session', new HttpDI\SessionExtension());
+	$compiler->addExtension('session', new SessionExtension());
 	$compiler->addExtension('application', new ApplicationExtension());
 
 	$compiler->addConfig([
@@ -35,12 +38,12 @@ $class = $loader->load(function (DI\Compiler $compiler): void {
 		'services' => [
 			SimpleRouter::class,
 		],
-	],
-	);
+	]);
+
+	return null;
 }, __FILE__);
 
 $container = new $class();
-assert($container instanceof DI\Container);
 
 $exchange = $container->getByType(Exchange::class);
 

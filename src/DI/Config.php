@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 
 namespace h4kuna\Exchange\DI;
 
@@ -9,6 +9,7 @@ use h4kuna\Exchange\Driver\Cnb\Day;
  */
 final class Config
 {
+
 	public bool $strict = true;
 
 	public float|int $vat = 21;
@@ -18,7 +19,7 @@ final class Config
 	/**
 	 * @var array<currency>
 	 */
-	public $defaultFormat = [];
+	public array $defaultFormat = [];
 
 	/**
 	 * @var array<string, currency>
